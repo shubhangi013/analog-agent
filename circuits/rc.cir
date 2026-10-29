@@ -1,0 +1,8 @@
+RC low-pass smoke test: R = 1 kohm, C = 1 uF
+Vin in 0 DC 0 AC 1
+R1 in out 1k
+C1 out 0 1u
+.ac dec 20 1 100k
+.print ac vm(out)
+.meas ac gain_at_1khz FIND vm(out) AT=1000
+.end

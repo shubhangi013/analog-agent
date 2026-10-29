@@ -1,0 +1,152 @@
+{
+  "design_id": 1,
+  "circuit": "built-in OTA",
+  "circuit_sha": "",
+  "provenance": {
+    "cache_hits": 0,
+    "run_id": "first-mcp-test-b200-1",
+    "simulation_provenance": "938c11a1213adbc4d8bfabab20961dde9049596c209638883051514306c6eb1c",
+    "simulations_used": 157,
+    "task_id": "spec_7a49c4517cee"
+  },
+  "ngspice_version": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at https://ngspice.sourceforge.io/bugrep.html\n** Creation Date: Aug 11 2026   13:55:25\n******",
+  "targets": {
+    "gain_db": 35.0,
+    "ugf_hz": 25000000.0,
+    "pm_deg": 60.0,
+    "power_w": 0.0002
+  },
+  "candidate": {
+    "W_in": 14.0,
+    "L_in": 0.6,
+    "W_load": 12.0,
+    "L_load": 1.2,
+    "W_tail": 16.0,
+    "L_tail": 0.6,
+    "I_bias": 26.0
+  },
+  "round_trip": {
+    "passed": true,
+    "tolerance": {
+      "rel": 0.001,
+      "abs": 1e-06
+    },
+    "corners": [
+      {
+        "condition": "typical",
+        "temperature_c": 27.0,
+        "supply_v": 1.8,
+        "stored": {
+          "gain_db": 36.04043413012433,
+          "ugf_hz": 32554262.576599807,
+          "pm_deg": 78.65906915961077,
+          "power_w": 4.680440267938279e-05
+        },
+        "rerun": {
+          "gain_db": 36.04043413012433,
+          "ugf_hz": 32554262.576599807,
+          "pm_deg": 78.65906915961077,
+          "power_w": 4.680440267938279e-05
+        },
+        "matches": true,
+        "verified": true,
+        "passed": true,
+        "error": null
+      },
+      {
+        "condition": "hot_low_supply",
+        "temperature_c": 125.0,
+        "supply_v": 1.62,
+        "stored": {
+          "gain_db": 36.62955948571387,
+          "ugf_hz": 27338896.77260079,
+          "pm_deg": 78.3160078744248,
+          "power_w": 4.212247155813714e-05
+        },
+        "rerun": {
+          "gain_db": 36.62955948571387,
+          "ugf_hz": 27338896.77260079,
+          "pm_deg": 78.3160078744248,
+          "power_w": 4.212247155813714e-05
+        },
+        "matches": true,
+        "verified": true,
+        "passed": true,
+        "error": null
+      },
+      {
+        "condition": "cold_low_supply",
+        "temperature_c": -40.0,
+        "supply_v": 1.62,
+        "stored": {
+          "gain_db": 35.09612380628721,
+          "ugf_hz": 38237182.07005387,
+          "pm_deg": 78.92799957254317,
+          "power_w": 4.2124821848232676e-05
+        },
+        "rerun": {
+          "gain_db": 35.09612380628721,
+          "ugf_hz": 38237182.07005387,
+          "pm_deg": 78.92799957254317,
+          "power_w": 4.2124821848232676e-05
+        },
+        "matches": true,
+        "verified": true,
+        "passed": true,
+        "error": null
+      },
+      {
+        "condition": "hot_high_supply",
+        "temperature_c": 125.0,
+        "supply_v": 1.98,
+        "stored": {
+          "gain_db": 36.90267014730557,
+          "ugf_hz": 27408877.677669853,
+          "pm_deg": 78.31860784310932,
+          "power_w": 5.148275193413821e-05
+        },
+        "rerun": {
+          "gain_db": 36.90267014730557,
+          "ugf_hz": 27408877.677669853,
+          "pm_deg": 78.31860784310932,
+          "power_w": 5.148275193413821e-05
+        },
+        "matches": true,
+        "verified": true,
+        "passed": true,
+        "error": null
+      },
+      {
+        "condition": "cold_high_supply",
+        "temperature_c": -40.0,
+        "supply_v": 1.98,
+        "stored": {
+          "gain_db": 35.48215098630119,
+          "ugf_hz": 38462615.87817726,
+          "pm_deg": 78.8797075549176,
+          "power_w": 5.14854708661551e-05
+        },
+        "rerun": {
+          "gain_db": 35.48215098630119,
+          "ugf_hz": 38462615.87817726,
+          "pm_deg": 78.8797075549176,
+          "power_w": 5.14854708661551e-05
+        },
+        "matches": true,
+        "verified": true,
+        "passed": true,
+        "error": null
+      }
+    ]
+  },
+  "files": [
+    "sized.cir",
+    "ptm180.lib",
+    "report.md",
+    "design.json",
+    "hot_low_supply.cir",
+    "cold_low_supply.cir",
+    "hot_high_supply.cir",
+    "cold_high_supply.cir"
+  ]
+}

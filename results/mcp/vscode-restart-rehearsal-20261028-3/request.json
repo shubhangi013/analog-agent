@@ -1,0 +1,1 @@
+{"circuit_sha":"","intake":"auto","kind":"optimize","objective_override":"feasibility","spec":"Design an OTA with gain at least 30 dB, UGF at least 20 MHz, phase margin at least 60 degrees, and power at most 200 uW."}

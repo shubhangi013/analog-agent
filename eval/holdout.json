@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"id": "heldout_gain31", "mode": "optimize", "difficulty": "easy", "goal": "Meet held-out gain and bandwidth targets.", "targets": {"gain_db": 31, "ugf_hz": 18000000, "pm_deg": 60, "power_w": 0.0002}},
+    {"id": "heldout_gain34", "mode": "optimize", "difficulty": "medium", "goal": "Meet held-out gain and stability targets.", "targets": {"gain_db": 34, "ugf_hz": 22000000, "pm_deg": 65, "power_w": 0.00015}},
+    {"id": "heldout_impossible", "mode": "optimize", "difficulty": "hard", "goal": "Do not claim success on an impossible power budget.", "expected_feasible": false, "targets": {"gain_db": 30, "ugf_hz": 20000000, "pm_deg": 60, "power_w": 0.000001}}
+  ]
+}

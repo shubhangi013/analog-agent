@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+<rect width="100%" height="100%" fill="white"/>
+<g font-family="sans-serif" font-size="12" fill="#222">
+<text x="80" y="22">Best complete five-condition target margin (higher is better)</text>
+<line x1="80" y1="350.0" x2="670" y2="350.0" stroke="#ddd"/><text x="8" y="354.0">-10.0%</text>
+<line x1="80" y1="272.5" x2="670" y2="272.5" stroke="#ddd"/><text x="8" y="276.5">-0.4%</text>
+<line x1="80" y1="195.0" x2="670" y2="195.0" stroke="#ddd"/><text x="8" y="199.0">9.1%</text>
+<line x1="80" y1="117.5" x2="670" y2="117.5" stroke="#ddd"/><text x="8" y="121.5">18.7%</text>
+<line x1="80" y1="40.0" x2="670" y2="40.0" stroke="#ddd"/><text x="8" y="44.0">28.3%</text>
+<polyline points="406.1,176.0" fill="none" stroke="#0072b2" stroke-width="2"><title>E01 random s0</title></polyline>
+<circle cx="406.1" cy="176.0" r="2" fill="#0072b2"/>
+<text x="690" y="50" fill="#0072b2">E01 random s0</text>
+<polyline points="592.4,87.1" fill="none" stroke="#d55e00" stroke-width="2"><title>E02 random s0</title></polyline>
+<circle cx="592.4" cy="87.1" r="2" fill="#d55e00"/>
+<text x="690" y="66" fill="#d55e00">E02 random s0</text>
+<polyline points="607.9,249.9 623.4,221.0 638.9,221.0" fill="none" stroke="#009e73" stroke-width="2"><title>E03 agent s0</title></polyline>
+<circle cx="607.9" cy="249.9" r="2" fill="#009e73"/>
+<circle cx="623.4" cy="221.0" r="2" fill="#009e73"/>
+<circle cx="638.9" cy="221.0" r="2" fill="#009e73"/>
+<text x="690" y="82" fill="#009e73">E03 agent s0</text>
+<polyline points="561.3,87.1" fill="none" stroke="#cc79a7" stroke-width="2"><title>E03 random s0</title></polyline>
+<circle cx="561.3" cy="87.1" r="2" fill="#cc79a7"/>
+<text x="690" y="98" fill="#cc79a7">E03 random s0</text>
+<polyline points="623.4,40.0 638.9,40.0" fill="none" stroke="#e69f00" stroke-width="2"><title>E04 agent s0</title></polyline>
+<circle cx="623.4" cy="40.0" r="2" fill="#e69f00"/>
+<circle cx="638.9" cy="40.0" r="2" fill="#e69f00"/>
+<text x="690" y="114" fill="#e69f00">E04 agent s0</text>
+<polyline points="406.1,176.0" fill="none" stroke="#333333" stroke-width="2"><title>E04 random s0</title></polyline>
+<circle cx="406.1" cy="176.0" r="2" fill="#333333"/>
+<text x="690" y="130" fill="#333333">E04 random s0</text>
+<polyline points="406.1,176.0" fill="none" stroke="#0072b2" stroke-width="2"><title>E05 random s0</title></polyline>
+<circle cx="406.1" cy="176.0" r="2" fill="#0072b2"/>
+<text x="690" y="146" fill="#0072b2">E05 random s0</text>
+<polyline points="638.9,72.9 654.5,72.9" fill="none" stroke="#d55e00" stroke-width="2"><title>E06 agent s0</title></polyline>
+<circle cx="638.9" cy="72.9" r="2" fill="#d55e00"/>
+<circle cx="654.5" cy="72.9" r="2" fill="#d55e00"/>
+<text x="690" y="162" fill="#d55e00">E06 agent s0</text>
+<polyline points="343.9,177.6" fill="none" stroke="#009e73" stroke-width="2"><title>E06 random s0</title></polyline>
+<circle cx="343.9" cy="177.6" r="2" fill="#009e73"/>
+<text x="690" y="178" fill="#009e73">E06 random s0</text>
+<polyline points="623.4,171.5" fill="none" stroke="#cc79a7" stroke-width="2"><title>E07 agent s0</title></polyline>
+<circle cx="623.4" cy="171.5" r="2" fill="#cc79a7"/>
+<text x="690" y="194" fill="#cc79a7">E07 agent s0</text>
+<polyline points="592.4,163.4" fill="none" stroke="#e69f00" stroke-width="2"><title>E07 random s0</title></polyline>
+<circle cx="592.4" cy="163.4" r="2" fill="#e69f00"/>
+<text x="690" y="210" fill="#e69f00">E07 random s0</text>
+<polyline points="638.9,125.0 654.5,125.0" fill="none" stroke="#333333" stroke-width="2"><title>E08 agent s0</title></polyline>
+<circle cx="638.9" cy="125.0" r="2" fill="#333333"/>
+<circle cx="654.5" cy="125.0" r="2" fill="#333333"/>
+<text x="690" y="226" fill="#333333">E08 agent s0</text>
+<polyline points="452.6,130.9" fill="none" stroke="#0072b2" stroke-width="2"><title>E08 random s0</title></polyline>
+<circle cx="452.6" cy="130.9" r="2" fill="#0072b2"/>
+<text x="690" y="242" fill="#0072b2">E08 random s0</text>
+<polyline points="607.9,127.4 623.4,84.1 638.9,84.1" fill="none" stroke="#d55e00" stroke-width="2"><title>E09 agent s0</title></polyline>
+<circle cx="607.9" cy="127.4" r="2" fill="#d55e00"/>
+<circle cx="623.4" cy="84.1" r="2" fill="#d55e00"/>
+<circle cx="638.9" cy="84.1" r="2" fill="#d55e00"/>
+<text x="690" y="258" fill="#d55e00">E09 agent s0</text>
+<polyline points="623.4,192.6 638.9,160.5" fill="none" stroke="#009e73" stroke-width="2"><title>E10 agent s0</title></polyline>
+<circle cx="623.4" cy="192.6" r="2" fill="#009e73"/>
+<circle cx="638.9" cy="160.5" r="2" fill="#009e73"/>
+<text x="690" y="274" fill="#009e73">E10 agent s0</text>
+<polyline points="406.1,176.0" fill="none" stroke="#cc79a7" stroke-width="2"><title>E10 random s0</title></polyline>
+<circle cx="406.1" cy="176.0" r="2" fill="#cc79a7"/>
+<text x="690" y="290" fill="#cc79a7">E10 random s0</text>
+<polyline points="623.4,215.5 638.9,192.1" fill="none" stroke="#e69f00" stroke-width="2"><title>M01 agent s0</title></polyline>
+<circle cx="623.4" cy="215.5" r="2" fill="#e69f00"/>
+<circle cx="638.9" cy="192.1" r="2" fill="#e69f00"/>
+<text x="690" y="306" fill="#e69f00">M01 agent s0</text>
+<polyline points="654.5,138.7 670.0,138.7" fill="none" stroke="#333333" stroke-width="2"><title>M01 random s0</title></polyline>
+<circle cx="654.5" cy="138.7" r="2" fill="#333333"/>
+<circle cx="670.0" cy="138.7" r="2" fill="#333333"/>
+<text x="690" y="322" fill="#333333">M01 random s0</text>
+<polyline points="607.9,157.9" fill="none" stroke="#0072b2" stroke-width="2"><title>M02 agent s0</title></polyline>
+<circle cx="607.9" cy="157.9" r="2" fill="#0072b2"/>
+<text x="690" y="338" fill="#0072b2">M02 agent s0</text>
+<polyline points="514.7,192.4" fill="none" stroke="#d55e00" stroke-width="2"><title>M02 random s0</title></polyline>
+<circle cx="514.7" cy="192.4" r="2" fill="#d55e00"/>
+<text x="690" y="354" fill="#d55e00">M02 random s0</text>
+<polyline points="561.3,231.1" fill="none" stroke="#009e73" stroke-width="2"><title>M03 agent s0</title></polyline>
+<circle cx="561.3" cy="231.1" r="2" fill="#009e73"/>
+<text x="690" y="370" fill="#009e73">M03 agent s0</text>
+<polyline points="343.9,177.6" fill="none" stroke="#cc79a7" stroke-width="2"><title>M03 random s0</title></polyline>
+<circle cx="343.9" cy="177.6" r="2" fill="#cc79a7"/>
+<text x="690" y="386" fill="#cc79a7">M03 random s0</text>
+<polyline points="561.3,228.1" fill="none" stroke="#e69f00" stroke-width="2"><title>M04 agent s0</title></polyline>
+<circle cx="561.3" cy="228.1" r="2" fill="#e69f00"/>
+<text x="690" y="402" fill="#e69f00">M04 agent s0</text>
+<polyline points="343.9,203.8" fill="none" stroke="#333333" stroke-width="2"><title>M04 random s0</title></polyline>
+<circle cx="343.9" cy="203.8" r="2" fill="#333333"/>
+<text x="690" y="418" fill="#333333">M04 random s0</text>
+<polyline points="638.9,190.9 654.5,190.9" fill="none" stroke="#0072b2" stroke-width="2"><title>M05 agent s0</title></polyline>
+<circle cx="638.9" cy="190.9" r="2" fill="#0072b2"/>
+<circle cx="654.5" cy="190.9" r="2" fill="#0072b2"/>
+<text x="690" y="434" fill="#0072b2">M05 agent s0</text>
+<polyline points="452.6,188.3" fill="none" stroke="#d55e00" stroke-width="2"><title>M05 random s0</title></polyline>
+<circle cx="452.6" cy="188.3" r="2" fill="#d55e00"/>
+<text x="690" y="450" fill="#d55e00">M05 random s0</text>
+<polyline points="592.4,231.3" fill="none" stroke="#009e73" stroke-width="2"><title>M06 agent s0</title></polyline>
+<circle cx="592.4" cy="231.3" r="2" fill="#009e73"/>
+<text x="690" y="466" fill="#009e73">M06 agent s0</text>
+<polyline points="654.5,262.1 670.0,228.8" fill="none" stroke="#cc79a7" stroke-width="2"><title>M06 random s0</title></polyline>
+<circle cx="654.5" cy="262.1" r="2" fill="#cc79a7"/>
+<circle cx="670.0" cy="228.8" r="2" fill="#cc79a7"/>
+<text x="690" y="482" fill="#cc79a7">M06 random s0</text>
+<polyline points="623.4,265.9 638.9,190.3" fill="none" stroke="#e69f00" stroke-width="2"><title>M07 agent s0</title></polyline>
+<circle cx="623.4" cy="265.9" r="2" fill="#e69f00"/>
+<circle cx="638.9" cy="190.3" r="2" fill="#e69f00"/>
+<text x="690" y="498" fill="#e69f00">M07 agent s0</text>
+<polyline points="514.7,229.0" fill="none" stroke="#333333" stroke-width="2"><title>M07 random s0</title></polyline>
+<circle cx="514.7" cy="229.0" r="2" fill="#333333"/>
+<text x="690" y="514" fill="#333333">M07 random s0</text>
+<polyline points="623.4,148.7" fill="none" stroke="#0072b2" stroke-width="2"><title>M08 agent s0</title></polyline>
+<circle cx="623.4" cy="148.7" r="2" fill="#0072b2"/>
+<text x="690" y="530" fill="#0072b2">M08 agent s0</text>
+<polyline points="561.3,170.4" fill="none" stroke="#d55e00" stroke-width="2"><title>M09 agent s0</title></polyline>
+<circle cx="561.3" cy="170.4" r="2" fill="#d55e00"/>
+<text x="690" y="546" fill="#d55e00">M09 agent s0</text>
+<polyline points="514.7,166.3" fill="none" stroke="#009e73" stroke-width="2"><title>M09 random s0</title></polyline>
+<circle cx="514.7" cy="166.3" r="2" fill="#009e73"/>
+<text x="690" y="562" fill="#009e73">M09 random s0</text>
+<polyline points="561.3,239.2" fill="none" stroke="#cc79a7" stroke-width="2"><title>M10 agent s0</title></polyline>
+<circle cx="561.3" cy="239.2" r="2" fill="#cc79a7"/>
+<text x="690" y="578" fill="#cc79a7">M10 agent s0</text>
+<polyline points="406.1,247.7" fill="none" stroke="#e69f00" stroke-width="2"><title>M10 random s0</title></polyline>
+<circle cx="406.1" cy="247.7" r="2" fill="#e69f00"/>
+<text x="690" y="594" fill="#e69f00">M10 random s0</text>
+<text x="80" y="375">0</text><text x="655" y="375">38</text><text x="230" y="402">Actual ngspice executions (cache hits are free)</text>
+</g></svg>

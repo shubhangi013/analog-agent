@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "id": "easy",
+      "mode": "optimize",
+      "difficulty": "easy",
+      "goal": "Find a five-transistor OTA meeting all targets at all five supply/temperature conditions.",
+      "targets": {"gain_db": 30, "ugf_hz": 20000000, "pm_deg": 60, "power_w": 0.0002}
+    },
+    {
+      "id": "gain33",
+      "mode": "optimize",
+      "difficulty": "medium",
+      "goal": "Increase gain to at least 33 dB while retaining bandwidth, stability and power limits.",
+      "targets": {"gain_db": 33, "ugf_hz": 20000000, "pm_deg": 60, "power_w": 0.0002}
+    },
+    {
+      "id": "ugf25",
+      "mode": "optimize",
+      "difficulty": "medium",
+      "goal": "Meet 25 MHz unity-gain bandwidth without sacrificing gain or exceeding the power limit.",
+      "targets": {"gain_db": 33, "ugf_hz": 25000000, "pm_deg": 60, "power_w": 0.0002}
+    },
+    {
+      "id": "gain36",
+      "mode": "optimize",
+      "difficulty": "hard",
+      "goal": "Meet 36 dB gain and 25 MHz bandwidth at all five conditions.",
+      "targets": {"gain_db": 36, "ugf_hz": 25000000, "pm_deg": 60, "power_w": 0.0002}
+    },
+    {
+      "id": "pm70",
+      "mode": "optimize",
+      "difficulty": "hard",
+      "goal": "Keep phase margin above 70 degrees at every condition while meeting gain, bandwidth and power targets.",
+      "targets": {"gain_db": 36, "ugf_hz": 25000000, "pm_deg": 70, "power_w": 0.0002}
+    },
+    {
+      "id": "gain40",
+      "mode": "optimize",
+      "difficulty": "hard",
+      "goal": "Reach 40 dB gain with 25 MHz bandwidth and 70 degree phase margin under 200 uW.",
+      "targets": {"gain_db": 40, "ugf_hz": 25000000, "pm_deg": 70, "power_w": 0.0002}
+    },
+    {
+      "id": "power_tradeoffs",
+      "mode": "optimize",
+      "difficulty": "hard",
+      "objective": "minimize_power",
+      "spec": "minimize power with gain >= 35 dB, UGF >= 25 MHz, phase margin >= 60 deg, power <= 200 uW",
+      "goal": "Minimize power with gain >= 35 dB, UGF >= 25 MHz and PM >= 60 degrees; show 2-3 measured alternatives and explain their trade-offs.",
+      "targets": {"gain_db": 35, "ugf_hz": 25000000, "pm_deg": 60, "power_w": 0.0002}
+    },
+    {
+      "id": "power_impossible",
+      "mode": "optimize",
+      "difficulty": "hard",
+      "goal": "Recognize failure within budget rather than inventing a passing design below 1 uW with a minimum 5 uA tail current.",
+      "expected_feasible": false,
+      "targets": {"gain_db": 30, "ugf_hz": 20000000, "pm_deg": 60, "power_w": 0.000001}
+    },
+    {
+      "id": "mirror_fault",
+      "mode": "debug",
+      "difficulty": "medium",
+      "goal": "Diagnose a disabled PMOS mirror output device using logged hypotheses and targeted DC probes.",
+      "fixture": "circuits/ota5t.cir.j2; replace M4 gate node mirror with vdd, leaving its other terminals unchanged.",
+      "fault": "mirror_gate",
+      "expected": [
+        "Identify M4 gate wiring as the cause, not just a failed performance target.",
+        "Log each hypothesis and targeted probe.",
+        "Support the diagnosis with simulated M4 Vsg, current and output bias.",
+        "Verify recovery after restoring the gate connection."
+      ]
+    },
+    {
+      "id": "clipping_fault",
+      "mode": "debug",
+      "difficulty": "hard",
+      "goal": "Diagnose an overloaded, rail-clipped output using model-selected experiments and a measured transient counterfactual.",
+      "fixture": "Built-in OTA with Rload out 0 100; unchanged differential sine stimulus for baseline and repair.",
+      "fault": "clipping_load",
+      "expected": [
+        "Identify excessive output loading from the circuit and measured baseline.",
+        "Log model hypotheses, typed tool choices and simulator evidence.",
+        "Demonstrate baseline clipping or distortion with a real transient waveform.",
+        "Change one parameter and verify both recovered DC bias and unclipped transient response.",
+        "Never reduce the stimulus to conceal the fault."
+      ]
+    },
+    {
+      "id": "explain_ota",
+      "mode": "explain",
+      "difficulty": "easy",
+      "goal": "Explain the five-transistor OTA, its bias network and every circuit node using real operating-point data.",
+      "fixture": "circuits/ota5t.cir.j2; W_in=10 L_in=1 W_load=5 L_load=1 W_tail=5 L_tail=1 I_bias=25; typical condition.",
+      "expected": [
+        "Explain the NMOS differential pair, PMOS mirror load and tail-current source.",
+        "Describe inp, inn, mirror, tail, tail_d, bias, out, vdd and ground.",
+        "Cite simulator-derived node voltages and transistor operating regions.",
+        "Never invent unavailable node voltages."
+      ]
+    }
+  ]
+}

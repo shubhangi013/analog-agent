@@ -1,0 +1,43 @@
+# Engineer-spec list results
+
+Processed specifications: 18. All source expectations are estimates, not ground truth.
+A search failure within budget is not proof of infeasibility. No failed task is scored as a zero-cost success.
+Null targets use the agent's disclosed production defaults, not unconstrained optimization. Results for those rows are conditional on those additional default constraints.
+Source text is parsed before search and checked against independent YAML quantities/objective. Mismatched or unresolved requests are not simulated. Intake is shared between search arms; each search has a cold independent cache. Export is excluded and approval is automatic.
+
+| Category | Specs | Accepted intake | Clarification | Intake errors/mismatches |
+|---|---:|---:|---:|---:|
+| easy | 0 | 0 | 0 | 0 |
+| medium | 0 | 0 | 0 | 0 |
+| hard | 10 | 10 | 0 | 0 |
+| objective | 8 | 8 | 0 | 0 |
+| infeasible | 0 | 0 | 0 | 0 |
+| parser | 0 | 0 | 0 | 0 |
+
+| Strategy | Verified designs / attempted | Simulations | Hard-check failures | Judge mean /4 |
+|---|---:|---:|---:|---:|
+| agent | 15 / 18 | 670 | 0 | 3.222 |
+| random | 8 / 18 | 659 | 0 | 1.933 |
+
+| Spec | Expectation (not oracle) | Intake | Search outcomes |
+|---|---|---|---|
+| H01 | borderline | accepted | agent: pass, 36 simulations; random: budget_exhausted, 40 simulations |
+| H02 | borderline | accepted | agent: pass, 40 simulations; random: stalled, 27 simulations |
+| H03 | likely_infeasible | accepted | agent: budget_exhausted, 33 simulations; random: budget_exhausted, 38 simulations |
+| H04 | borderline | accepted | agent: pass, 31 simulations; random: budget_exhausted, 40 simulations |
+| H05 | borderline | accepted | agent: pass, 29 simulations; random: budget_exhausted, 37 simulations |
+| H06 | likely_infeasible | accepted | agent: pass, 31 simulations; random: pass, 40 simulations |
+| H07 | borderline | accepted | agent: budget_exhausted, 36 simulations; random: stalled, 38 simulations |
+| H08 | likely_infeasible | accepted | agent: pass, 40 simulations; random: stalled, 32 simulations |
+| H09 | likely_infeasible | accepted | agent: budget_exhausted, 40 simulations; random: budget_exhausted, 40 simulations |
+| H10 | borderline | accepted | agent: pass, 36 simulations; random: budget_exhausted, 40 simulations |
+| O01 | feasible | accepted | agent: pass, 38 simulations; random: pass, 40 simulations |
+| O02 | feasible | accepted | agent: pass, 40 simulations; random: pass, 40 simulations |
+| O03 | feasible | accepted | agent: pass, 40 simulations; random: pass, 34 simulations |
+| O04 | feasible | accepted | agent: pass, 40 simulations; random: pass, 35 simulations |
+| O05 | feasible | accepted | agent: pass, 40 simulations; random: pass, 40 simulations |
+| O06 | feasible | accepted | agent: pass, 40 simulations; random: pass, 40 simulations |
+| O07 | feasible | accepted | agent: pass, 40 simulations; random: pass, 40 simulations |
+| O08 | feasible | accepted | agent: pass, 40 simulations; random: stalled, 18 simulations |
+
+Detailed qualitative assessments and measured alternatives: report.md. Per-spec intake, assumptions and independent contract checks: spec_results.json. Per-task measurements, model/judge usage, failures and traces: results.json and case folders.

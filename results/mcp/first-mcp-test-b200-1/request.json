@@ -1,0 +1,1 @@
+{"circuit_sha":"","intake":"auto","kind":"optimize","objective_override":"minimize_power","spec":"Minimize power with gain >=35 dB, UGF >=25 MHz, and phase margin >=60 degrees."}

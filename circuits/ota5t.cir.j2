@@ -1,0 +1,30 @@
+Five-transistor OTA: differential AC input of 1 V, load 1 pF
+.include "ptm180.lib"
+.temp {{ temperature_c }}
+.options numdgt=15
+.param diffusion=0.18u
+Vdd vdd 0 {{ supply_v }}
+Vip inp 0 DC {{ common_mode_v }} AC 0.5
+Vin inn 0 DC {{ common_mode_v }} AC 0.5 180
+Vbias bias 0 0
+Vsense tail tail_d 0
+M1 mirror inp tail 0 NMOS W={{ W_in }}u L={{ L_in }}u AD={{{ W_in }}u*diffusion} AS={{{ W_in }}u*diffusion} PD={2*({{ W_in }}u+diffusion)} PS={2*({{ W_in }}u+diffusion)}
+M2 out inn tail 0 NMOS W={{ W_in }}u L={{ L_in }}u AD={{{ W_in }}u*diffusion} AS={{{ W_in }}u*diffusion} PD={2*({{ W_in }}u+diffusion)} PS={2*({{ W_in }}u+diffusion)}
+M3 mirror mirror vdd vdd PMOS W={{ W_load }}u L={{ L_load }}u AD={{{ W_load }}u*diffusion} AS={{{ W_load }}u*diffusion} PD={2*({{ W_load }}u+diffusion)} PS={2*({{ W_load }}u+diffusion)}
+M4 out mirror vdd vdd PMOS W={{ W_load }}u L={{ L_load }}u AD={{{ W_load }}u*diffusion} AS={{{ W_load }}u*diffusion} PD={2*({{ W_load }}u+diffusion)} PS={2*({{ W_load }}u+diffusion)}
+M5 tail_d bias 0 0 NMOS W={{ W_tail }}u L={{ L_tail }}u AD={{{ W_tail }}u*diffusion} AS={{{ W_tail }}u*diffusion} PD={2*({{ W_tail }}u+diffusion)} PS={2*({{ W_tail }}u+diffusion)}
+Cload out 0 1p
+.control
+set noaskquit
+set wr_singlescale
+set numdgt=15
+dc Vbias 0 {{ supply_v }} 0.001
+meas dc bias_voltage FIND v(bias) WHEN i(Vsense)={{ bias_a }} CROSS=1
+alter Vbias $&bias_voltage
+op
+wrdata op.tsv v(out) v(bias) i(Vdd) i(Vsense) @m1[vds] @m1[vdsat] @m1[vgs] @m1[vth] @m1[id] @m2[vds] @m2[vdsat] @m2[vgs] @m2[vth] @m2[id] @m3[vds] @m3[vdsat] @m3[vgs] @m3[vth] @m3[id] @m4[vds] @m4[vdsat] @m4[vgs] @m4[vth] @m4[id] @m5[vds] @m5[vdsat] @m5[vgs] @m5[vth] @m5[id]
+{{ node_commands }}
+{{ ac_commands }}
+quit
+.endc
+.end

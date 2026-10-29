@@ -1,0 +1,10 @@
+{
+  "tasks": [
+    {"id": "easy", "targets": {"gain_db": 30, "ugf_hz": 20000000, "pm_deg": 60, "power_w": 0.0002}},
+    {"id": "gain33", "targets": {"gain_db": 33, "ugf_hz": 20000000, "pm_deg": 60, "power_w": 0.0002}},
+    {"id": "ugf25", "targets": {"gain_db": 33, "ugf_hz": 25000000, "pm_deg": 60, "power_w": 0.0002}},
+    {"id": "gain36", "targets": {"gain_db": 36, "ugf_hz": 25000000, "pm_deg": 60, "power_w": 0.0002}},
+    {"id": "pm70", "targets": {"gain_db": 36, "ugf_hz": 25000000, "pm_deg": 70, "power_w": 0.0002}},
+    {"id": "gain40", "targets": {"gain_db": 40, "ugf_hz": 25000000, "pm_deg": 70, "power_w": 0.0002}}
+  ]
+}

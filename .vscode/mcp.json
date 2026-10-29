@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "analog-circuit-engineer": {
+      "type": "stdio",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "agent.mcp_server"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  }
+}

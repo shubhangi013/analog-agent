@@ -1,0 +1,4 @@
+pydantic>=2.12,<3
+pytest>=8.4,<10
+PyYAML>=6,<7
+mcp>=2,<3
