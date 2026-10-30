@@ -181,6 +181,7 @@ def write_spec_report(directory: Path, specs: list[dict], results: list[dict]) -
 def evaluate_spec(
     spec: EngineerSpec, directory: Path, defaults: Targets, config: LLMConfig, *,
     strategies: tuple[str, ...], budget: int, seed: int, judge: bool, resume: bool,
+    dc_failure_memory: bool,
 ) -> tuple[dict, list[dict]]:
     print(f"Spec {spec.id} ({spec.category}): intake", flush=True)
     intake = resolve_spec(spec, defaults, directory / f"{spec.id}_intake", resume=resume)
@@ -203,7 +204,11 @@ def evaluate_spec(
                 difficulty=spec.category if spec.category in ("easy", "medium", "hard") else "hard",
             )
             print(f"Spec {spec.id}: {arm}, budget={budget}", flush=True)
-            result = run_case(case, arm, seed, budget, directory, resolved_request=request, resume=resume)
+            result = run_case(
+                case, arm, seed, budget, directory, resolved_request=request, resume=resume,
+                use_dc_failure_memory=dc_failure_memory,
+                dc_memory_path=directory / f"dc_failure_memory_{arm}.sqlite3",
+            )
             result["expected_feasible"] = None
             result["heuristic_checks"] = intake["checks"] + heuristic_checks(result)
         else:
@@ -232,7 +237,7 @@ def evaluate_spec(
 def run_specs(
     source: Path, directory: Path, *, strategy: Literal["agent", "random", "both"] = "both",
     budget: int = 40, seed: int = 0, tasks: list[str] | None = None, judge: bool = True,
-    case_workers: int = 1, resume: bool = False,
+    case_workers: int = 1, resume: bool = False, dc_failure_memory: bool = False,
 ) -> list[dict]:
     source_bytes = source.read_bytes()
     suite = SpecList.model_validate(yaml.safe_load(source_bytes))
@@ -251,6 +256,7 @@ def run_specs(
         "selected_specs": sorted(selected), "strategy": strategy, "seed": seed,
         "budget": budget, "workers": WORKERS, "case_workers": case_workers,
         "model": config.model, "judge": judge,
+        "dc_failure_memory": dc_failure_memory,
         "defaults": defaults.model_dump(), "ngspice_version": version,
         "conditions": [condition.model_dump() for condition in CORNERS],
         "code_sha256": {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
@@ -261,7 +267,8 @@ def run_specs(
     if resume:
         original = json.loads(manifest_path.read_text(encoding="utf-8"))
         for key in ("source_sha256", "selected_specs", "strategy", "seed", "budget",
-                    "model", "judge", "defaults", "ngspice_version", "conditions", "workers"):
+                    "model", "judge", "dc_failure_memory", "defaults", "ngspice_version",
+                    "conditions", "workers"):
             if original[key] != manifest[key]:
                 raise ValueError(f"Cannot resume with changed {key}.")
         for path, digest in original["code_sha256"].items():
@@ -281,6 +288,7 @@ def run_specs(
         futures = [pool.submit(
             evaluate_spec, spec, directory, defaults, config, strategies=strategies,
             budget=budget, seed=seed, judge=judge, resume=resume,
+            dc_failure_memory=dc_failure_memory,
         ) for spec in specs]
         for future in as_completed(futures):
             record, current = future.result()
@@ -304,9 +312,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--task", action="append")
     parser.add_argument("--judge", choices=("llm", "off"), default="llm")
-    parser.add_argument("--case-workers", type=int, default=4,
+    parser.add_argument("--case-workers", type=int, default=1,
                         help="Concurrent specifications; each search still has its own four-worker limit.")
     parser.add_argument("--resume", action="store_true", help="Reuse completed evidence and resume search checkpoints.")
+    parser.add_argument("--dc-failure-memory", choices=("on", "off"), default="off")
     args = parser.parse_args(argv)
     try:
         directory = args.out or ROOT / "runs" / "eval" / f"spec_list_{uuid4().hex}"
@@ -314,7 +323,8 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("--resume requires the original --out directory.")
         results = run_specs(args.specs, directory, strategy=args.strategy, budget=args.budget,
                             seed=args.seed, tasks=args.task, judge=args.judge == "llm",
-                            case_workers=args.case_workers, resume=args.resume)
+                            case_workers=args.case_workers, resume=args.resume,
+                            dc_failure_memory=args.dc_failure_memory == "on")
         print(f"Spec report: {directory / 'spec_report.md'}")
         return int(any(result["heuristic_status"] == "fail"
                        or result["status"] in ("error", "intake_error", "intake_mismatch")

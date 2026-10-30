@@ -248,7 +248,8 @@ def run_case(
     case: EvalCase, strategy: Literal["agent", "random"], seed: int,
     budget: int, out_dir: Path,
     *, warm_candidate: Candidate | None = None, resolved_request: Request | None = None,
-    resume: bool = False,
+    resume: bool = False, use_dc_failure_memory: bool = False,
+    dc_memory_path: Path | None = None,
 ) -> dict:
     case_dir = out_dir / f"{case.id}_{strategy}_s{seed}"
     if case.mode != "optimize":
@@ -273,6 +274,7 @@ def run_case(
         ):
             raise ValueError("Resolved intake must match the independent evaluation targets/objective.")
         memory = Memory(case_dir / "memory.sqlite3")
+        dc_memory = Memory(dc_memory_path) if dc_memory_path is not None else memory
         run_id = f"{strategy}_s{seed}"
         tracer = Tracer(case.id, run_id, case_dir)
         planner = Planner.from_env(tracer) if strategy == "agent" else RandomPlanner(tracer, seed)
@@ -287,6 +289,7 @@ def run_case(
             budget=budget, yes=True, exporter=skip_export, export_root=case_dir / "exports",
             objective=case.objective,
             initial_candidates=initial, use_lessons=False, use_predictor=strategy == "agent",
+            use_dc_failure_memory=use_dc_failure_memory, dc_memory=dc_memory,
             candidate_prior=warm_candidate,
             assumptions=request.assumptions if request else None,
         )
@@ -320,6 +323,7 @@ def run_case(
             "objective_supported": True,
             "expected_feasible": case.expected_feasible,
             "strategy": strategy, "seed": seed, "budget": budget,
+            "dc_failure_memory": use_dc_failure_memory,
             "status": outcome.outcome, "error": outcome.message,
             "simulations_used": outcome.simulations_used, "cache_hits": outcome.cache_hits,
             "engineer_verdict": "automatic_eval_approval_not_human_review",

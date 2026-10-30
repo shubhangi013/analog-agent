@@ -22,7 +22,7 @@ from agent.sim import (
 )
 from agent.smoke import ROOT, find_ngspice
 from agent.tracer import TraceEvent, Tracer, json_text
-from agent.verifier import Targets, verify
+from agent.verifier import Targets, verify, verify_dc
 
 
 def utc_now() -> str:
@@ -144,6 +144,25 @@ class Memory:
                     done INTEGER NOT NULL,
                     PRIMARY KEY(task_id, run_id, job_id)
                 );
+                CREATE TABLE IF NOT EXISTS dc_results (
+                    id INTEGER PRIMARY KEY,
+                    W_in REAL NOT NULL, L_in REAL NOT NULL,
+                    W_load REAL NOT NULL, L_load REAL NOT NULL,
+                    W_tail REAL NOT NULL, L_tail REAL NOT NULL,
+                    I_bias REAL NOT NULL,
+                    condition_json TEXT NOT NULL,
+                    condition_name TEXT NOT NULL,
+                    temperature_c REAL NOT NULL,
+                    supply_v REAL NOT NULL,
+                    passed INTEGER NOT NULL,
+                    failing_check TEXT,
+                    margin REAL NOT NULL,
+                    provenance TEXT NOT NULL,
+                    targets_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS dc_results_lookup
+                    ON dc_results (provenance, condition_name, temperature_c, supply_v, id);
             """)
             columns = {row["name"] for row in connection.execute("PRAGMA table_info(design_library)")}
             if "circuit_sha" not in columns:
@@ -170,6 +189,180 @@ class Memory:
             if "cache_hits" not in job_columns:
                 connection.execute("ALTER TABLE task_jobs ADD COLUMN cache_hits INTEGER NOT NULL DEFAULT 0")
                 connection.execute("UPDATE task_jobs SET cache_hits=cache_hit WHERE done=1")
+            dc_columns = {row["name"] for row in connection.execute("PRAGMA table_info(dc_results)")}
+            if "targets_json" not in dc_columns:
+                connection.execute(
+                    "ALTER TABLE dc_results ADD COLUMN targets_json TEXT NOT NULL DEFAULT '{}'"
+                )
+
+    @staticmethod
+    def _dc_outcome(
+        candidate: Candidate, result: SimulationResult, targets: Targets,
+    ) -> tuple[bool, str | None, float]:
+        """Label a measured DC result without changing verifier authority."""
+        verdict = verify_dc(candidate, result, targets)
+        margins: list[tuple[float, str]] = []
+        for reason in verdict.failures:
+            prefix = reason.split(":", 1)[0]
+            check, margin = prefix, -1.0
+            point = result.bias.get(prefix)
+            if point is not None and "not saturated" in reason:
+                check = f"{prefix}.saturation"
+                margin = (point.vds - point.vdsat) / max(point.vdsat, 1e-12)
+            elif point is not None and "off or below" in reason:
+                check = f"{prefix}.strong_inversion"
+                margin = min(
+                    (point.vgs - point.vth) / max(abs(point.vth), 1e-12),
+                    (point.id_a - 1e-9) / 1e-9,
+                )
+            elif point is not None and "vdsat must" in reason:
+                check = f"{prefix}.vdsat_nonnegative"
+                margin = point.vdsat / max(abs(point.vdsat), 1e-12)
+            elif prefix == "power_w" and result.dc_power_w is not None:
+                margin = (targets.power_w - result.dc_power_w) / targets.power_w
+            elif reason.startswith("simulation status"):
+                check = "simulation_status"
+            elif reason.startswith("simulation error"):
+                check = "simulation_error"
+            margins.append((margin, check))
+        if not verdict.passed:
+            margin, check = min(margins, default=(-1.0, "dc_verifier"))
+            return False, check, margin
+
+        passing_margins = []
+        for point in result.bias.values():
+            passing_margins.extend([
+                (point.vgs - point.vth) / max(abs(point.vth), 1e-12),
+                (point.vds - point.vdsat) / max(point.vdsat, 1e-12),
+            ])
+        if result.dc_power_w is not None:
+            passing_margins.append((targets.power_w - result.dc_power_w) / targets.power_w)
+        return True, None, min(passing_margins, default=0.0)
+
+    def store_dc_result(
+        self, candidate: Candidate, result: SimulationResult, targets: Targets,
+        provenance: str,
+    ) -> int:
+        if result.analysis != "op":
+            raise ValueError("Only operating-point results belong in DC failure memory.")
+        if not provenance:
+            raise ValueError("DC failure memory requires simulation provenance.")
+        passed, failing_check, margin = self._dc_outcome(candidate, result, targets)
+        values = candidate.model_dump()
+        with self.connect() as connection:
+            cursor = connection.execute(
+                "INSERT INTO dc_results (W_in,L_in,W_load,L_load,W_tail,L_tail,I_bias,"
+                "condition_json,condition_name,temperature_c,supply_v,passed,failing_check,"
+                "margin,provenance,targets_json,created_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (*values.values(), json_text(result.condition.model_dump()),
+                 result.condition.name, result.condition.temperature_c,
+                 result.condition.supply_v, int(passed), failing_check, margin,
+                 provenance, json_text(targets.model_dump()), utc_now()),
+            )
+        if cursor.lastrowid is None:
+            raise RuntimeError("SQLite did not return the DC result id.")
+        return cursor.lastrowid
+
+    def predict_dc_failure(
+        self, candidate: Candidate, condition: Condition, provenance: str, targets: Targets,
+        *, k: int = 5,
+    ) -> dict | None:
+        if k < 1:
+            raise ValueError("DC failure-memory neighbor count must be positive.")
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM dc_results WHERE provenance=? AND condition_name=? "
+                "AND temperature_c=? AND supply_v=?",
+                (provenance, condition.name, condition.temperature_c, condition.supply_v),
+            ).fetchall()
+        from agent.tools import candidate_ranges
+        ranges = candidate_ranges()
+        desired = candidate.model_dump()
+
+        def distance(row: sqlite3.Row) -> float:
+            return math.sqrt(sum(
+                ((float(row[name]) - desired[name]) / (high - low)) ** 2
+                for name, (low, high) in ranges.items()
+            ))
+
+        unique: dict[tuple[float, ...], list[sqlite3.Row]] = {}
+        for row in rows:
+            key = tuple(float(row[name]) for name in ranges)
+            unique.setdefault(key, []).append(row)
+        representatives: list[tuple[sqlite3.Row, bool, str | None]] = []
+        for group in unique.values():
+            checks = {row["failing_check"] for row in group if not row["passed"]}
+            passed = any(row["passed"] for row in group)
+            check = next(iter(checks)) if not passed and len(checks) == 1 else None
+            if check == "power_w" and any(
+                row["targets_json"] != json_text(targets.model_dump()) for row in group
+            ):
+                check = None
+            representatives.append((group[-1], passed, check))
+        if len(representatives) < k:
+            return None
+        nearest = sorted(
+            representatives, key=lambda item: (distance(item[0]), item[0]["id"])
+        )[:k]
+        checks = {check for _, passed, check in nearest if not passed}
+        if any(passed or check is None for _, passed, check in nearest) or len(checks) != 1:
+            return None
+        check = next(iter(checks))
+        return {
+            "check": check,
+            "neighbors": k,
+            "max_distance": max(distance(row) for row, _, _ in nearest),
+            "mean_margin": sum(float(row["margin"]) for row, _, _ in nearest) / k,
+        }
+
+    def dc_failure_patterns(
+        self, provenance: str, candidate: Candidate, targets: Targets, *,
+        limit: int = 3, neighbor_limit: int = 30,
+    ) -> list[str]:
+        if limit < 0:
+            raise ValueError("DC failure-pattern limit cannot be negative.")
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM dc_results WHERE provenance=? ORDER BY id",
+                (provenance,),
+            ).fetchall()
+        from agent.tools import candidate_ranges
+        ranges = candidate_ranges()
+        desired = candidate.model_dump()
+        groups: dict[tuple[object, ...], list[sqlite3.Row]] = {}
+        for row in rows:
+            key = (
+                *(float(row[name]) for name in ranges),
+                row["condition_name"], row["temperature_c"], row["supply_v"],
+            )
+            groups.setdefault(key, []).append(row)
+        nearby: list[tuple[float, str, str | None]] = []
+        for group in groups.values():
+            checks = {row["failing_check"] for row in group if not row["passed"]}
+            row = group[-1]
+            passed = any(row["passed"] for row in group)
+            check = next(iter(checks)) if not passed and len(checks) == 1 else None
+            if check == "power_w" and row["targets_json"] != json_text(targets.model_dump()):
+                check = None
+            distance = math.sqrt(sum(
+                ((float(row[name]) - desired[name]) / (high - low)) ** 2
+                for name, (low, high) in ranges.items()
+            ))
+            nearby.append((distance, row["condition_name"], check))
+        nearest = sorted(
+            nearby, key=lambda item: (item[0], item[1], item[2] or "")
+        )[:neighbor_limit]
+        counts: dict[tuple[str, str], int] = {}
+        for _, condition, check in nearest:
+            if check is None:
+                continue
+            counts[(condition, check)] = counts.get((condition, check), 0) + 1
+        ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        return [
+            f"{check} at {condition}: {count} of {len(nearest)} nearby unique measured failures"
+            for (condition, check), count in ordered[:limit]
+        ]
 
     def reserve_simulation(
         self, task_id: str, run_id: str, job_id: str, budget: int, max_attempts: int,

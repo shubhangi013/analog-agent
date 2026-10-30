@@ -76,6 +76,7 @@ class PlannerState(BaseModel):
     no_improvement_rounds: int = Field(default=0, ge=0)
     all_conditions_passed: bool = False
     lessons: list[str] = Field(default_factory=list)
+    dc_failure_patterns: list[str] = Field(default_factory=list)
     design: StoredDesign | None = None
 
 
@@ -205,6 +206,9 @@ def results_section(state: PlannerState) -> str:
 def retrieved_section(state: PlannerState) -> str:
     lines = ["LESSONS"]
     lines += [f"- {lesson[:300]}" for lesson in state.lessons[:3]] or ["(none)"]
+    if state.dc_failure_patterns:
+        lines += ["MEASURED CROSS-TASK DC FAILURE PATTERNS"]
+        lines += [f"- {pattern[:240]}" for pattern in state.dc_failure_patterns[:3]]
     if state.design is not None:
         design = state.design
         targets = ", ".join(format_target(n, t) for n, t in design.targets.model_dump().items())

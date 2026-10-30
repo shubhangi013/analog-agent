@@ -158,6 +158,37 @@ def test_failed_dc_never_gets_ac_or_later_conditions(
                    for _, condition, _ in harness.sim.calls)
 
 
+def test_predicted_dc_failure_never_overrides_real_simulation(tmp_path: Path) -> None:
+    harness = build(tmp_path)
+    harness.orch.use_dc_failure_memory = True
+    state = harness.orch._load_or_start()
+    candidate = state.candidates["r0c1"]
+    failed = SimulationResult(
+        status="ok", condition=orchestrator.TYPICAL, analysis="op", dc_power_w=100e-6,
+        bias={
+            f"m{index}": BiasPoint(
+                vds=0.1 if index == 5 else 0.5, vdsat=0.2,
+                vgs=0.6, vth=0.4, id_a=12.5e-6,
+            )
+            for index in range(1, 6)
+        },
+        run_dir="stored-failure",
+    )
+    provenance = harness.orch._dc_provenance(state)
+    for index in range(5):
+        neighbor = candidate.model_copy(update={"W_in": candidate.W_in + index * 0.1})
+        harness.memory.store_dc_result(neighbor, failed, TARGETS, provenance)
+
+    assert harness.orch._run_jobs(state, [("r0c1", orchestrator.TYPICAL)], analysis="op") is False
+    assert harness.orch._passes_dc(state, "r0c1", orchestrator.TYPICAL)
+    assert any(call[1:] == ("typical", "op") for call in harness.sim.calls)
+    prediction = next(
+        event for event in events(harness.tracer)
+        if event.get("inputs", {}).get("tool") == "predict_dc_failure"
+    )
+    assert prediction["outputs"]["authority"].startswith("scheduling only")
+
+
 def test_failed_corner_survivors_are_backfilled_with_deferred_candidates(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:

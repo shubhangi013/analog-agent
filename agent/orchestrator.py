@@ -138,6 +138,7 @@ class Orchestrator:
         timeout_s: float = 300,
         initial_candidates: list[Candidate] | None = None,
         use_lessons: bool = True, use_predictor: bool = True,
+        use_dc_failure_memory: bool = False, dc_memory: Memory | None = None,
         warm_start: bool = False,
         candidate_prior: Candidate | None = None,
         goal_to_interpret: str | None = None,
@@ -162,6 +163,8 @@ class Orchestrator:
         self.timeout_s = timeout_s
         self.initial_candidates = initial_candidates
         self.use_lessons, self.use_predictor = use_lessons, use_predictor
+        self.use_dc_failure_memory = use_dc_failure_memory
+        self.dc_memory = dc_memory or memory
         self.warm_start = warm_start or candidate_prior is not None
         self.candidate_prior = candidate_prior
         self.goal_to_interpret, self.objective_override = goal_to_interpret, objective_override
@@ -496,6 +499,31 @@ class Orchestrator:
         self, state: WorkingState, jobs: list[tuple[str, Condition]], *, analysis: str = "ac",
     ) -> bool:
         """Run pending jobs in parallel; return True if the budget ran out."""
+        predictions: dict[tuple[str, str], dict] = {}
+        if analysis == "op" and self.use_dc_failure_memory:
+            provenance = self._dc_provenance(state)
+            for cid, condition in jobs:
+                prediction = self.dc_memory.predict_dc_failure(
+                    state.candidates[cid], condition, provenance, self.targets,
+                )
+                if prediction is not None:
+                    predictions[(cid, condition.name)] = prediction
+            jobs = sorted(
+                jobs,
+                key=lambda job: (job[0], job[1].name) in predictions,
+            )
+            if predictions:
+                self.tracer.emit(TraceEvent(
+                    type="tool_call",
+                    inputs={"tool": "predict_dc_failure", "k": 5},
+                    outputs={
+                        "predicted_last": [
+                            {"candidate_id": cid, "condition": condition, **prediction}
+                            for (cid, condition), prediction in predictions.items()
+                        ],
+                        "authority": "scheduling only; simulation and verifier remain required",
+                    },
+                ))
         pending: dict[Future[CachedSimulation | None], tuple[str, str]] = {}
         pool = ThreadPoolExecutor(max_workers=WORKERS)
         exhausted = False
@@ -528,6 +556,12 @@ class Orchestrator:
                     exhausted = True
                     continue
                 state.results[key] = answer.result
+                if analysis == "op" and not answer.cache_hit:
+                    cid = key.split("|", 1)[0]
+                    self.dc_memory.store_dc_result(
+                        state.candidates[cid], answer.result, self.targets,
+                        self._dc_provenance(state),
+                    )
                 self.memory.save_job(
                     self.task_id, self.run_id, job_id, answer.result,
                     cache_hit=answer.cache_hit, done=True,
@@ -837,6 +871,11 @@ class Orchestrator:
             all_conditions_passed=self._winner(state) is not None,
             lessons=[record["text"] for record in self._lesson_records(str(state.execution["provenance"]))]
             if self.use_lessons else [],
+            dc_failure_patterns=self.dc_memory.dc_failure_patterns(
+                self._dc_provenance(state),
+                best.candidate if best is not None else next(iter(state.candidates.values())),
+                self.targets,
+            ) if self.use_dc_failure_memory else [],
             design=designs[0] if designs else None,
         )
 
@@ -857,6 +896,9 @@ class Orchestrator:
         records = self.tracer.tool("retrieve_lessons", self.memory.lesson_records)
         return [record for record in records if record["circuit_sha"] == self.circuit_sha
                 and record["provenance"] == provenance]
+
+    def _dc_provenance(self, state: WorkingState) -> str:
+        return f"{state.execution['provenance']}:{self.circuit_sha or 'built-in'}"
 
 
 def main(argv: list[str] | None = None) -> int:

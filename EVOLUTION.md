@@ -30,6 +30,8 @@ O = objective. E/M and H/O denote those groups.
 | Planner-feedback correction | Near-miss candidates lost their measured progress and DC failure details before later planner calls | Added each candidate's furthest measured stage and per-condition DC failure reason to context | Three E/M observations averaged 16.67/20 versus random 15.33/20 |
 | Repeated-run analysis | Typical-pass candidates deferred from corner testing were never reconsidered after admitted candidates failed | Added budget-aware survivor backfilling in worker-limited batches | E/M improved to 17.33/20 and 10/10 medium cases in every observation |
 | Held-out validation | Needed evidence that fixes were not tuned only to E/M failures | Ran untouched H01-H10 and O01-O08 three times | Agent 13.00/18 versus random 9.33/18 |
+| Guarded candidate lessons | A verified design might be reusable on a later task, but untested advice could regress search | Reverified candidate priors and promoted them only after fixed held-out replay | On the deterministic sequence, later tasks reached first verification in 10 rather than 21 simulations |
+| Cross-task DC failure memory | Repeated DC failures might identify low-value candidates before scheduling | Added simulator-derived nearest-neighbor memory and compact planner patterns, then ran a paired ablation | Rejected as a default: E/M improved, but H/O mean success fell |
 
 ## Current evidence
 
@@ -238,6 +240,154 @@ For total compute, the difference is large on easy/medium (690.67 versus
 - The agent's demonstrated advantage is verified success rate and qualitative
   engineering output, not time-to-first-design.
 
+## Stage 5: cross-task DC failure memory
+
+### Change tested
+
+Every executed operating-point simulation was recorded in a new SQLite table
+with the seven candidate parameters, condition, deterministic DC verdict,
+failing check, normalized margin and simulator/model/circuit provenance. Before
+DC scheduling, code retrieved the five nearest records in normalized parameter
+space for the same condition and provenance. A candidate was scheduled last
+only when all five neighbors failed the same check.
+
+The prediction never skipped simulation and never marked a candidate as passed
+or failed. The existing DC verifier remained the only authority. Up to three
+aggregate measured failure patterns were also included in the bounded planner
+context. No model generated labels or margins.
+
+The ablation ran E01-E10/M01-M10 and H01-H10/O01-O08 three times with memory
+disabled and enabled. Both agent and seeded-random arms used independent
+simulation caches. Cross-task memory was shared only within the corresponding
+strategy and run. The qualitative judge was disabled because the acceptance
+criterion was deterministic verified success.
+
+### Results
+
+| Dataset | Memory | Agent verified | Agent simulations | Random verified | Random simulations | Matched first design: agent | Matched first design: random |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Easy/medium | Off | 16.00/20 +/- 0.82 | 678.67 | 15.33/20 +/- 2.49 | 479.33 | 34.39 | 21.95 |
+| Easy/medium | On | 17.33/20 +/- 0.47 | 694.67 | 15.33/20 +/- 2.49 | 479.33 | 34.43 | 21.85 |
+| Hard/objective | Off | 14.33/18 +/- 0.94 | 668.33 | 9.33/18 +/- 0.94 | 662.00 | 34.47 | 22.37 |
+| Hard/objective | On | 13.67/18 +/- 1.70 | 668.00 | 9.33/18 +/- 0.94 | 662.00 | 33.12 | 23.66 |
+
+Matched first-design values compare only cases solved by both strategies within
+that dataset, memory setting and run. The matched case sets therefore differ
+slightly between the on and off rows.
+
+Agent verified counts by run:
+
+| Dataset | Memory off | Memory on |
+|---|---|---|
+| Easy/medium | 17, 15, 16 | 18, 17, 17 |
+| Hard/objective | 15, 15, 13 | 12, 16, 13 |
+
+### Decision
+
+The memory improved easy/medium mean success by 1.33 tasks but increased mean
+simulation use by 16. It reduced hard/objective mean success by 0.67 tasks,
+despite nearly identical total simulation use. Random results and simulation
+counts were unchanged, showing that scheduling failed candidates last did not
+save work when the batch still had enough budget to execute them later.
+
+The feature therefore failed the predeclared rule that verified success must
+not drop. It remains implemented behind an explicit option for further
+experiments, but is disabled by default. This is negative evidence: the present
+nearest-neighbor rule is not a demonstrated learning improvement.
+
+### Corrected follow-up
+
+Trace inspection found three defects in the first memory experiment:
+
+- repeated observations of the same candidate counted as independent
+  neighbors;
+- power failures could transfer between tasks with different power targets;
+- planner summaries used global failure counts rather than local counts with a
+  denominator.
+
+The implementation was corrected so identical points count once, nearby passes
+block unanimous-failure prediction, power failures require matching targets,
+and planner patterns describe nearby unique observations. A regression test
+also confirms that a memory prediction cannot override a real simulation or
+verifier result. The full suite passed with 327 tests.
+
+Only the six memory-enabled arms were rerun because the disabled-memory controls
+were unaffected by these changes.
+
+| Dataset | Corrected-memory agent verified | Agent simulations | Random verified | Random simulations | Matched first design: agent | Matched first design: random |
+|---|---:|---:|---:|---:|---:|---:|
+| Easy/medium | 17.33/20 +/- 1.25 | 708.67 | 15.33/20 +/- 2.49 | 479.33 | 35.26 | 22.19 |
+| Hard/objective | 13.67/18 +/- 0.94 | 665.67 | 9.33/18 +/- 0.94 | 662.00 | 34.34 | 22.65 |
+
+Agent verified counts were 17, 16 and 19 on easy/medium and 13, 15 and
+13 on hard/objective. Traces contained only two DC prediction tool events per
+easy/medium run and four per hard/objective run. The corrected mechanism was
+therefore too sparse to materially change scheduling, while live model
+proposal variation remained much larger.
+
+The corrected experiment still failed the keep rule: hard/objective success
+remained below the disabled-memory control of 14.33/18, and easy/medium
+matched first-design cost increased from 34.39 to 35.26 simulations. Cross-task
+DC failure memory remains disabled. No further tuning was performed.
+
+## Stage 6: guarded learning loop and stopping point
+
+The retained learning mechanism stores a successful, all-condition verified
+candidate as a proposed lesson. It does not trust the lesson immediately.
+`agent.lessons.validate_lesson` replays baseline and proposed searches on the
+fixed held-out suite with equal budgets and cold caches. Promotion is allowed
+only when integrity checks pass, every baseline success remains a success, and
+simulations to first verification do not increase. A promoted candidate is
+still simulated and verified on every later task.
+
+The bounded context builder retrieves at most three validated lesson summaries.
+It also includes at most one similar verified design and, only when explicitly
+enabled, three measured DC patterns. Raw ngspice output and full conversation
+history are excluded. The LLM may choose proposals using this context, but it
+cannot author measurements, promote lessons, decide pass/fail or bypass the
+simulator.
+
+### Sequential closed-loop evidence
+
+The seeded-random paired sequence `easy`, `gain33`, `gain36` used identical
+seeds, cold per-task simulation caches and the production scheduler and
+verifier. This result measures candidate reuse without LLM-planner variability;
+it is not evidence that the LLM learned.
+
+| Task | Without lesson: first / total | With lesson: first / total | Prior reused | Promotion |
+|---|---:|---:|---|---|
+| easy | 21 / 21 | 21 / 21 | No | Accepted |
+| gain33 | 21 / 21 | 10 / 15 | Yes | Accepted |
+| gain36 | 21 / 21 | 10 / 15 | Yes | Accepted |
+
+Search executions fell from 63 to 51. Held-out validation required another
+444 executions, so this is evidence of reusable learning behavior, not a claim
+of immediate net compute savings. The actual model-planner sequence did not
+reliably produce a candidate eligible for promotion and therefore did not
+demonstrate LLM-driven learning. That negative result is retained rather than
+replaced with an unsupported claim.
+
+### Cache, memory and context roles
+
+| Mechanism | Retained role | Evidence and limit |
+|---|---|---|
+| Simulation cache | Avoid rerunning an identical netlist, model, simulator version and condition | Cache hits are fingerprinted and traced; cached measurements retain their original verifier path |
+| Verified design memory | Retrieve measured prior designs and candidate lessons | In the seeded-random sequence, reuse improved later tasks from 21 to 10 simulations to first verification |
+| Planner context | Present bounded targets, summaries, latest measured rows and validated retrievals | Character-limited and rebuilt before each model call; no raw simulator logs or full history |
+| DC failure memory | Experimental scheduling hint only | Failed both keep-rule experiments and is disabled by default |
+| LLM | Proposal and qualitative-summary layer | Useful for search and explanation, but not accepted as numeric or verification authority |
+
+### Final decision
+
+This is the stopping point for the proof of concept. The repository now shows
+the complete evolution expected from an interview demo: deterministic
+simulation and verification, observable traces, fingerprinted caching, bounded
+context, successful guarded reuse of verified designs, and an honestly rejected
+failure-memory experiment. Further work would require a broader topology and
+process suite plus proposal-replay-controlled model experiments; additional
+tuning on the current OTA benchmark would risk overfitting rather than improve
+the credibility of the baseline.
+
 ## Additional capability evidence
 
 ### Compact natural-language intake
@@ -322,7 +472,7 @@ and consistently higher qualitative judge scores. Efficiency is mixed: total
 compute is nearly equal on held-out hard/objective cases but random is cheaper
 on easy/medium and reaches first verification sooner on matched solved cases.
 
-The next improvement should be judged against all three groups:
+If work continued, any improvement would be judged against all three groups:
 
 1. E01-E10, to recover easy reliability;
 2. M01-M10, to preserve the current 10/10 medium result;

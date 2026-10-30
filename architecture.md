@@ -11,7 +11,7 @@ number and every pass/fail verdict.
 | LLM | Azure AI Foundry chat-completions deployment set by `LLM_MODEL` (evaluated with `gpt-6.1-sol`); JSON replies validated with Pydantic |
 | LLM is used for | Free-form spec intake, planning later optimization rounds, choosing debug experiments, writing explanations, eval judging |
 | LLM is never used for | Simulation, numbers, ranking candidates, pass/fail, budget, stopping, approval |
-| Simulator | ngspice (batch mode), 180 nm PTM model file, Jinja netlist template `circuits\ota5t.cir.j2` |
+| Simulator | ngspice (batch mode), 180 nm PTM model file, netlist template with `{{ }}` placeholders at `circuits\ota5t.cir.j2` |
 | Circuit | Five-transistor OTA; five supply/temperature conditions (typical 27 C / 1.8 V plus 1.62/1.98 V at -40/125 C) |
 | Interfaces | CLI (`python -m agent.orchestrator`, `agent.debug_mode`, `agent.explain`) and MCP server for VS Code / Copilot |
 | State | SQLite (checkpoints, jobs, cache, designs, lessons) and one JSONL trace per run |

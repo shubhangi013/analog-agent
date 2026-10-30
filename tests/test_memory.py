@@ -108,6 +108,61 @@ def test_cache_survives_reopening(
     assert len(calls) == 1
 
 
+def test_dc_failure_prediction_ignores_other_provenance(
+    memory: Memory, candidate: Candidate, result: SimulationResult, targets: Targets,
+) -> None:
+    result.analysis = "op"
+    result.metrics = None
+    result.dc_power_w = 100e-6
+    result.bias["m5"].vds = 0.1
+    result.bias["m5"].vdsat = 0.2
+    for index in range(5):
+        neighbor = candidate.model_copy(update={"W_in": candidate.W_in + index * 0.1})
+        memory.store_dc_result(neighbor, result, targets, "old-provenance")
+
+    assert memory.predict_dc_failure(
+        candidate, Condition(), "new-provenance", targets,
+    ) is None
+    prediction = memory.predict_dc_failure(
+        candidate, Condition(), "old-provenance", targets,
+    )
+    assert prediction is not None
+    assert prediction["check"] == "m5.saturation"
+    assert prediction["neighbors"] == 5
+
+
+def test_duplicate_dc_records_do_not_count_as_distinct_neighbors(
+    memory: Memory, candidate: Candidate, result: SimulationResult, targets: Targets,
+) -> None:
+    result.analysis = "op"
+    result.metrics = None
+    result.dc_power_w = 100e-6
+    result.bias["m5"].vds = 0.1
+    result.bias["m5"].vdsat = 0.2
+    for _ in range(5):
+        memory.store_dc_result(candidate, result, targets, "same-provenance")
+
+    assert memory.predict_dc_failure(
+        candidate, Condition(), "same-provenance", targets,
+    ) is None
+
+
+def test_power_failure_does_not_transfer_between_targets(
+    memory: Memory, candidate: Candidate, result: SimulationResult, targets: Targets,
+) -> None:
+    result.analysis = "op"
+    result.metrics = None
+    result.dc_power_w = 100e-6
+    strict = targets.model_copy(update={"power_w": 50e-6})
+    for index in range(5):
+        neighbor = candidate.model_copy(update={"W_in": candidate.W_in + index * 0.1})
+        memory.store_dc_result(neighbor, result, strict, "same-provenance")
+
+    assert memory.predict_dc_failure(
+        candidate, Condition(), "same-provenance", targets,
+    ) is None
+
+
 def test_cache_trace_records_both_requests(
     engine: tuple[CachedSimulator, list[tuple[str, bytes]]], candidate: Candidate,
 ) -> None:
